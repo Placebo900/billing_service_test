@@ -1,0 +1,37 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+    
+    - name: Build the Docker images
+      run: docker-compose -f './docker-compose.yml' build 
+      
+    - name: Up the Docker images
+      run: docker-compose -f './docker-compose.yml' up --no-start
+      
+    - name: Start the Docker images
+      run: docker-compose -f './docker-compose.yml' start
+      
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v3.3.0
+      
+    - name: Go Test Action
+      uses: robherley/go-test-action@v0.1.0
+      with:
+        testArguments: ./cmd/...
+    
+    - name: Shut down images
+      run: docker-compose -f './docker-compose.yml' down
