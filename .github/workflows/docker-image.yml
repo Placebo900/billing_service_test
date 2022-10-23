@@ -20,7 +20,10 @@ jobs:
       run: docker-compose -f './docker-compose.yml' build 
       
     - name: Up the Docker images
-      run: docker-compose -f './docker-compose.yml' up
+      run: docker-compose -f './docker-compose.yml' up --no-start
+      
+    - name: Start the Docker images
+      run: docker-compose -f './docker-compose.yml' start
       
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v3.3.0
