@@ -15,15 +15,15 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v3
-      
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v3.3.0
     
     - name: Build the Docker images
       run: docker-compose -f './docker-compose.yml' build 
       
     - name: Up the Docker images
       run: docker-compose -f './docker-compose.yml' up
+      
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v3.3.0
       
     - name: Go Test Action
       uses: robherley/go-test-action@v0.1.0
