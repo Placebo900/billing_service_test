@@ -226,7 +226,10 @@ func (billDB *BillingDB) CheckMonthlyReport(date string) error {
 	resTable = append(resTable, []string{"service_id", "price"})
 	for rows.Next() {
 		var line [2]string
-		rows.Scan(&line[0], &line[1])
+		err = rows.Scan(&line[0], &line[1])
+		if err != nil {
+			return err
+		}
 		resTable = append(resTable, line[:])
 	}
 	f, err := os.Create(fmt.Sprintf("bill_%s.csv", date))
