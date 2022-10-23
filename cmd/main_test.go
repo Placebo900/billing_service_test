@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -19,6 +20,9 @@ func readStatus(resp *http.Response) int {
 
 func readBody(bs *[]byte, resp *http.Response) (int, error) {
 	n, err := resp.Body.Read(*bs)
+	if err == nil || err == io.EOF {
+		return n, nil
+	}
 	return n, err
 }
 
@@ -52,37 +56,31 @@ func TestReserve(t *testing.T) {
 	assertQuery(t, readStatus(resp) == http.StatusOK, "expected status OK", count)
 
 	count++
-	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 123, "service_id": 30, "price": 10000}`)
+	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 124, "service_id": 30, "price": 10000}`)
 	resp, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
 	respError(t, count, err)
 	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bad request", count)
 
 	count++
-	bodyReq = strings.NewReader(`{"user_id": 2, "order_id": 1, "service_id": 30, "price": 10000}`)
-	resp, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
-	respError(t, count, err)
-	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bad request", count)
-
-	count++
-	bodyReq = strings.NewReader(`{"user_id": 2, "order_id": 123, "service_id": 1, "price": 10000}`)
-	resp, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
-	respError(t, count, err)
-	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bad request", count)
-
-	count++
-	bodyReq = strings.NewReader(`{"user_id": 2, "order_id": 123, "service_id": 30, "price": -10000}`)
-	resp, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
-	respError(t, count, err)
-	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bad request", count)
-
-	count++
-	bodyReq = strings.NewReader(`{"user_id": 2, "order_id": 123, "service_id": 30, "price": 9000}`)
+	bodyReq = strings.NewReader(`{"user_id": 2, "order_id": 1, "service_id": 30, "price": 10}`)
 	resp, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
 	respError(t, count, err)
 	assertQuery(t, readStatus(resp) == http.StatusOK, "expected status OK", count)
 
 	count++
-	bodyReq = strings.NewReader(`{"user_id": 2, "order_id": 123, "service_id": 30, "price": 99000}`)
+	bodyReq = strings.NewReader(`{"user_id": 2, "order_id": 125, "service_id": 1, "price": 10}`)
+	resp, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
+	respError(t, count, err)
+	assertQuery(t, readStatus(resp) == http.StatusOK, "expected status OK", count)
+
+	count++
+	bodyReq = strings.NewReader(`{"user_id": 2, "order_id": 126, "service_id": 30, "price": -10000}`)
+	resp, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
+	respError(t, count, err)
+	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bad request", count)
+
+	count++
+	bodyReq = strings.NewReader(`{"user_id": 2, "order_id": 127, "service_id": 30, "price": 99000}`)
 	resp, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
 	respError(t, count, err)
 	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bas request", count)
@@ -94,41 +92,41 @@ func TestDebitReserve(t *testing.T) {
 	respError(t, -1, err)
 
 	count := 1
-	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 123, "service_id": 30, "price": 10000}`)
+	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 233, "service_id": 30, "price": 10000}`)
 	resp, err := http.Post("http://localhost:8080/debit_reserve", "application/json", bodyReq)
 	respError(t, count, err)
 	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bas request", count)
 
-	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 123, "service_id": 30, "price": 10000}`)
+	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 233, "service_id": 30, "price": 10000}`)
 	_, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
 	respError(t, 0, err)
 
 	count++
-	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 123, "service_id": 30, "price": 1000}`)
+	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 233, "service_id": 30, "price": 10000}`)
 	resp, err = http.Post("http://localhost:8080/debit_reserve", "application/json", bodyReq)
 	respError(t, count, err)
 	assertQuery(t, readStatus(resp) == http.StatusOK, "expected status OK", count)
 
 	count++
-	bodyReq = strings.NewReader(`{"user_id": 4, "order_id": 123, "service_id": 30, "price": 1000}`)
+	bodyReq = strings.NewReader(`{"user_id": 4, "order_id": 233, "service_id": 30, "price": 1000}`)
 	resp, err = http.Post("http://localhost:8080/debit_reserve", "application/json", bodyReq)
 	respError(t, count, err)
 	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bad request", count)
 
 	count++
-	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 1, "service_id": 30, "price": 1000}`)
+	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 127, "service_id": 30, "price": 1000}`)
 	resp, err = http.Post("http://localhost:8080/debit_reserve", "application/json", bodyReq)
 	respError(t, count, err)
 	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bad request", count)
 
 	count++
-	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 123, "service_id": 1, "price": 1000}`)
+	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 128, "service_id": 1, "price": 1000}`)
 	resp, err = http.Post("http://localhost:8080/debit_reserve", "application/json", bodyReq)
 	respError(t, count, err)
 	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bad request", count)
 
 	count++
-	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 123, "service_id": 30, "price": 1}`)
+	bodyReq = strings.NewReader(`{"user_id": 3, "order_id": 129, "service_id": 30, "price": 1}`)
 	resp, err = http.Post("http://localhost:8080/debit_reserve", "application/json", bodyReq)
 	respError(t, count, err)
 	assertQuery(t, readStatus(resp) == http.StatusBadRequest, "expected status bad request", count)
@@ -137,14 +135,10 @@ func TestDebitReserve(t *testing.T) {
 func TestCancellation(t *testing.T) {
 	bodyReq := strings.NewReader(`{"user_id": 4, "price": 20000}`)
 	_, err := http.Post("http://localhost:8080/credit", "application/json", bodyReq)
-	respError(t, -2, err)
-
-	bodyReq = strings.NewReader(`{"user_id": 4, "order_id": 123, "service_id": 30, "price": 10000}`)
-	_, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
 	respError(t, -1, err)
 
 	bodyReq = strings.NewReader(`{"user_id": 4, "order_id": 123, "service_id": 30, "price": 10000}`)
-	_, err = http.Post("http://localhost:8080/debit_reserve", "application/json", bodyReq)
+	_, err = http.Post("http://localhost:8080/reserve", "application/json", bodyReq)
 	respError(t, 0, err)
 
 	count := 1
@@ -160,7 +154,7 @@ func TestAccount(t *testing.T) {
 	respError(t, 0, err)
 
 	count := 1
-	bodyReq = strings.NewReader(`{"user_id": 4}`)
+	bodyReq = strings.NewReader(`{"user_id": 5}`)
 	req, err := http.NewRequest(http.MethodGet, "http://localhost:8080/account", bodyReq)
 	respError(t, count, err)
 	req.Header.Set("Content-Type", "application/json")

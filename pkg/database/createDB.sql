@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS Users (
 );
 
 CREATE TABLE IF NOT EXISTS Transactions (
-    order_id INT NOT NULL PRIMARY KEY,
+    order_id INT NOT NULL,
     service_id INT NOT NULL,
     user_id INT NOT NULL,
     cost NUMERIC NOT NULL,

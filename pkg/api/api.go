@@ -160,7 +160,7 @@ func postCancelReserve(db *server.BillingDB) gin.HandlerFunc {
 			})
 			return
 		}
-		log.Printf("DEBITING RESERVE WITH VALUES %+v", billID)
+		log.Printf("CANCELLING WITH VALUES %+v", billID)
 		err := db.Cancellation(billID.UserID, billID.OrderID)
 		if err != nil {
 			log.Print("ERROR: ", err)

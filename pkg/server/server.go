@@ -148,18 +148,23 @@ func (billDB *BillingDB) Confirmation(userID int, serviceID int, orderID int, pr
 }
 
 func (billDB *BillingDB) Cancellation(userID int, orderID int) error {
-	var usersBalance, usersReserve float64
-	err := billDB.DB.QueryRow("select (balance, reserve) from Users where id = $1", userID).Scan(&usersBalance, &usersReserve)
+	var usersBalance float64
+	err := billDB.DB.QueryRow("select balance from Users where id = $1", userID).Scan(&usersBalance)
 	if err != nil {
 		return err
 	}
-	log.Printf("User's ID: %d, balance: %f", userID, usersBalance)
+	var usersReserve float64
+	err = billDB.DB.QueryRow("select reserved from Users where id = $1", userID).Scan(&usersReserve)
+	if err != nil {
+		return err
+	}
+	log.Printf("User's ID: %d, balance: %f, reserve: %f", userID, usersBalance, usersReserve)
 	var cost float64
 	err = billDB.DB.QueryRow("select cost from Transactions where order_id = $1", orderID).Scan(&cost)
 	if err != nil {
 		return err
 	}
-	res, err := billDB.DB.Exec(`update Transactions set order_status = 'cancelled', date = $4
+	res, err := billDB.DB.Exec(`update Transactions set order_status = 'cancelled', date = $3
 		where order_id = $1 and user_id = $2;`,
 		orderID, userID, time.Now())
 	if err != nil {
